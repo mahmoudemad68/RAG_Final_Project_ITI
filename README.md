@@ -353,6 +353,4 @@ fingerprint rules.
 - Citation checks prove source/page mapping, not complete semantic entailment.
 - No medical diagnosis, personalized prescription, or emergency triage.
 
-## Attribution
 
-See THIRD_PARTY_NOTICES.md and docs/phases/reference-reuse-map.md.
