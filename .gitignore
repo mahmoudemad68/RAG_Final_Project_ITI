@@ -50,6 +50,11 @@ data/raw/*.pdf
 # Downloaded implementation reference; never submit it
 reference/
 
+# Local project guidance and reference-reuse documentation
+THIRD_PARTY_NOTICES.md
+graduation_project_guide.md
+docs/phases/reference-reuse-map.md
+
 # Editors and operating systems
 .idea/
 .vscode/
