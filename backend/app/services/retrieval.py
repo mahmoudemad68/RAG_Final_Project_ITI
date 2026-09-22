@@ -61,6 +61,30 @@ QUERY_EXPANSIONS: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(r"\breview\w*\b", re.IGNORECASE),
         "monitor asthma control routine review inhaler technique adherence reliever",
     ),
+    (
+        re.compile(r"(?:ال)?ربو", re.IGNORECASE),
+        "asthma airway disease",
+    ),
+    (
+        re.compile(r"تشخيص|فحص|اختبار", re.IGNORECASE),
+        "asthma diagnosis spirometry bronchodilator reversibility FeNO",
+    ),
+    (
+        re.compile(r"بخاخ|مستنشق|استنشاق", re.IGNORECASE),
+        "asthma inhaler inhaled corticosteroid controller reliever technique",
+    ),
+    (
+        re.compile(r"نوب(?:ة|ه)|تفاقم|أزمة|ازمة", re.IGNORECASE),
+        "asthma attack exacerbation acute management action plan",
+    ),
+    (
+        re.compile(r"طفل|أطفال|اطفال", re.IGNORECASE),
+        "child children pediatric asthma",
+    ),
+    (
+        re.compile(r"حمل|حامل", re.IGNORECASE),
+        "pregnancy pregnant asthma management",
+    ),
 )
 
 

@@ -1,3 +1,15 @@
+import pytest
+from app.core.config import Settings
+from app.main import create_app
+from app.services.generation import GenerationService
+from fastapi.testclient import TestClient
+
+
+class ReadyOllamaClient:
+    def show(self, model: str):
+        return {"model": model}
+
+
 def test_health_reports_ready(client):
     response = client.get("/health")
 
@@ -50,6 +62,44 @@ def test_emergency_refusal_skips_retrieval(client, fake_retrieval):
     assert response.status_code == 200
     assert response.json()["risk"]["risk_level"] == "refuse_redirect"
     assert response.json()["confidence"]["generation_allowed"] is False
+    assert fake_retrieval.calls == 0
+
+
+@pytest.mark.parametrize(
+    ("question", "apology_prefix"),
+    [
+        ("What is a dog?", "I'm sorry"),
+        ("How are you?", "I'm sorry"),
+        ("ما هو الكلب؟", "عذرًا"),
+        ("كيف حالك؟", "عذرًا"),
+    ],
+)
+def test_out_of_domain_question_is_blocked_before_retrieval(
+    fake_retrieval,
+    question,
+    apology_prefix,
+):
+    generation = GenerationService(Settings(), client=ReadyOllamaClient())
+    app = create_app(
+        settings=Settings(),
+        retrieval_service=fake_retrieval,
+        generation_service=generation,
+    )
+
+    with TestClient(app) as scoped_client:
+        response = scoped_client.post("/query", json={"question": question})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer"].startswith(apology_prefix)
+    assert body["risk"] == {
+        "risk_level": "refuse_redirect",
+        "reason": "outside_asthma_scope",
+    }
+    assert body["confidence"]["generation_allowed"] is False
+    assert body["answer_mode"] == "safety_refusal"
+    assert body["generation_attempts"] == 0
+    assert body["sources"] == []
     assert fake_retrieval.calls == 0
 
 

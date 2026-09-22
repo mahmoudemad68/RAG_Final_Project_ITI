@@ -20,7 +20,7 @@ screenshots, provenance records, and release documentation are present.
 | Evaluation table | 15 answer/safety rows in the executed notebook and CSV | Complete |
 | FastAPI | GET /health and POST /query, lifespan loading, CORS, typed schemas | Complete |
 | Streamlit | Chat input, loading state, answer, sources, evidence expander, friendly errors | Complete |
-| Automated tests | 30 passed; lint, format, compile, and pip checks passed | Complete |
+| Automated tests | 64 passed; lint, format, compile, and pip checks passed | Complete |
 | End-to-end demo | Cold API query and warm browser query returned grounded HTTP 200 responses | Complete |
 | Screenshots | Streamlit grounded response and Swagger 200 response in docs/images | Complete |
 | GitHub publication | Local release content is ready; owner account/remote/push required | Owner action |

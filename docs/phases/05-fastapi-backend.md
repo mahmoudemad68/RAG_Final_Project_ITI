@@ -145,6 +145,8 @@ Optional additive fields may include:
 - risk
 - citation_checks
 - source_details
+- answer_mode
+- generation_attempts
 - request_id
 
 Do not remove or rename answer and sources.
@@ -213,6 +215,7 @@ Use structured, concise logs with:
 - total latency
 - retrieval latency
 - generation latency
+- answer mode and Ollama attempt count
 - retrieved/selected chunk counts
 - confidence decision
 - verification outcome

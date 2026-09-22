@@ -61,6 +61,15 @@ class SourceDetail(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
+    answer_mode: Literal[
+        "ollama",
+        "ollama_corrected",
+        "extractive_fallback",
+        "safety_refusal",
+        "insufficient_evidence",
+        "verification_blocked",
+    ] = "ollama"
+    generation_attempts: int = Field(default=0, ge=0, le=2)
     sources: list[str]
     source_details: list[SourceDetail] = Field(default_factory=list)
     risk: RiskAssessment

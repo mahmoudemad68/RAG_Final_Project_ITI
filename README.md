@@ -21,8 +21,9 @@ Implemented and locally verified on 2026-09-22:
   correction attempt, citation/numeric verification, and a verified verbatim
   fallback
 - FastAPI `GET /health` and `POST /query`, Streamlit chat, evidence display,
-  deterministic medical-safety handling, and CORS
-- 30 passing automated tests, clean Ruff lint/format checks, successful Python
+  fail-closed English/Arabic asthma-scope filtering, deterministic
+  medical-safety handling, and CORS
+- 64 passing automated tests, clean Ruff lint/format checks, successful Python
   compilation, and consistent installed dependencies
 - executed 12-case retrieval and 15-case answer/safety evaluations
 - cold-cache API and browser-driven Streamlit/Swagger acceptance tests
@@ -192,7 +193,7 @@ Open http://localhost:8501.
 | APP_VERSION | 0.1.0 | API version |
 | OLLAMA_BASE_URL | http://localhost:11434 | Ollama server |
 | OLLAMA_MODEL | llama3.2:1b | CPU-friendly local generation model |
-| OLLAMA_NUM_PREDICT | 48 | Maximum generated tokens per attempt |
+| OLLAMA_NUM_PREDICT | 96 | Maximum generated tokens per attempt |
 | OLLAMA_NUM_CTX | 2048 | Ollama context-window size |
 | VECTOR_STORE_PATH | data/vector_store/chroma | Chroma artifact |
 | RAG_CONFIG_PATH | data/rag_config.json | Index configuration |
@@ -229,11 +230,20 @@ Required response fields:
 
     {
       "answer": "Grounded answer with citation...",
+      "answer_mode": "ollama",
+      "generation_attempts": 1,
       "sources": ["GINA 2026 Strategy Report, p. 77"]
     }
 
 The response also provides typed source details, risk, confidence, citation
 checks, citation faithfulness, citation coverage, and unsupported numbers.
+`answer_mode` reports whether the released answer came from the first Ollama
+draft, a corrected Ollama draft, an extractive fallback, or a refusal path.
+
+Backend logs use the same request ID for retrieval, each generation attempt,
+verification, fallback selection, and the final response. They report the
+answer mode, attempt count, citation metrics, unsupported-number count, and
+source count without logging the raw question or answer.
 
 Validation failures return 422. A missing index or unavailable model returns
 503, generation timeouts return 504, and unexpected controlled service errors

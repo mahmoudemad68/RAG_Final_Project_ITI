@@ -43,7 +43,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OLLAMA_MODEL", "ollama_model"),
     )
     ollama_num_predict: int = Field(
-        default=48,
+        default=96,
         ge=32,
         le=2048,
         validation_alias=AliasChoices("OLLAMA_NUM_PREDICT", "ollama_num_predict"),

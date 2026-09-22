@@ -1,5 +1,15 @@
 {
   "schema_version": 1,
+  "domain_scope": {
+    "patterns": [
+      "\\b(asthma|asthmatic|wheez\\w*|bronchospasm|bronchoconstriction|bronchodilator\\w*|inhaler\\w*|spirometr\\w*|fev1|peak expiratory flow|peak flow meter)\\b",
+      "\\b(mart|smart|ics-formoterol|formoterol|budesonide|beclometasone|beclomethasone|salbutamol|albuterol|saba|laba|lama|feno|gina|ng245)\\b",
+      "\\b(inhaled corticosteroid\\w*|anti-inflammatory reliever|asthma action plan|asthma attack|asthma exacerbation|asthma control|asthma trigger\\w*)\\b",
+      "\\b(?:ال)?ربو\\b",
+      "\\b(بخاخ(?:ة|ات)?|مستنشق(?:ات)?|استنشاقي|صفير الصدر|ازيز الصدر|تشنج قصبي|تضيق الشعب|موسع(?:ات)? الشعب|قياس التنفس|مقياس التنفس|وظائف الرئ[ةه]|تدفق الزفير)\\b",
+      "\\b(سالبوتامول|البوتيرول|فورموتيرول|بوديزونيد|بيكلوميتازون|كورتيزون مستنشق)\\b"
+    ]
+  },
   "rules": [
     {
       "name": "possible_emergency",
@@ -22,7 +32,9 @@
       "name": "clearly_non_clinical",
       "risk_level": "refuse_redirect",
       "patterns": [
-        "\\b(write (?:me )?(?:python|javascript|java|c\\+\\+) code|weather forecast|cooking recipe|capital of france)\\b"
+        "\\b(write (?:me )?(?:python|javascript|java|c\\+\\+) code|weather forecast|cooking recipe|capital of france)\\b",
+        "\\b(ignore|forget|disregard)\\b.{0,80}\\b(asthma|guidelines?)\\b",
+        "\\b(تجاهل|انسي|اترك)\\b.{0,80}(الربو|الارشادات)"
       ]
     },
     {
@@ -42,10 +54,16 @@
   ],
   "refusals": {
     "empty_query": "Please provide an asthma-guideline question.",
+    "empty_query_ar": "يرجى كتابة سؤال يتعلق بإرشادات الربو.",
     "possible_emergency": "This may require urgent medical attention. Contact local emergency medical services or seek immediate professional care now.",
+    "possible_emergency_ar": "قد تتطلب هذه الحالة عناية طبية عاجلة. اتصل بخدمات الطوارئ المحلية أو اطلب رعاية طبية فورية الآن.",
     "personal_medication_advice": "I cannot recommend a medication or dose for a specific person. Please consult a qualified healthcare professional.",
-    "clearly_non_clinical": "This question is outside the indexed asthma-guideline scope.",
-    "outside_asthma_scope": "This question is outside the indexed asthma-guideline scope."
+    "personal_medication_advice_ar": "لا يمكنني اقتراح دواء أو جرعة لشخص بعينه. يرجى استشارة مختص رعاية صحية مؤهل.",
+    "clearly_non_clinical": "I'm sorry, but I can only answer questions related to asthma and the indexed asthma guidelines.",
+    "clearly_non_clinical_ar": "عذرًا، يمكنني الإجابة فقط عن الأسئلة المتعلقة بالربو وإرشادات الربو المفهرسة.",
+    "outside_asthma_scope": "I'm sorry, but I can only answer questions related to asthma and the indexed asthma guidelines.",
+    "outside_asthma_scope_ar": "عذرًا، يمكنني الإجابة فقط عن الأسئلة المتعلقة بالربو وإرشادات الربو المفهرسة."
   },
-  "default_refusal": "I can only answer questions supported by the indexed asthma guidelines."
+  "default_refusal": "I'm sorry, but I can only answer questions supported by the indexed asthma guidelines.",
+  "default_refusal_ar": "عذرًا، يمكنني الإجابة فقط عن الأسئلة التي تدعمها إرشادات الربو المفهرسة."
 }

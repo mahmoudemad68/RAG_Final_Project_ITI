@@ -52,11 +52,18 @@ async def query(payload: QueryRequest, request: Request) -> QueryResponse:
     # Deterministic refusals do not need retrieval or a running LLM.
     risk = generation.classify_risk(payload.question)
     if risk.risk_level == "refuse_redirect":
-        response = generation.answer(payload.question, [])
+        response = generation.answer(
+            payload.question,
+            [],
+            request_id=request_id,
+        )
         logger.info(
-            "request_id=%s route=/query status=200 risk=%s latency_ms=%.1f",
+            "request_id=%s route=/query status=200 risk=%s answer_mode=%s "
+            "generation_attempts=%d latency_ms=%.1f",
             request_id,
             risk.reason,
+            response.answer_mode,
+            response.generation_attempts,
             (time.perf_counter() - started) * 1000,
         )
         return response
@@ -92,31 +99,46 @@ async def query(payload: QueryRequest, request: Request) -> QueryResponse:
     retrieval_ms = (time.perf_counter() - retrieval_started) * 1000
 
     config = retrieval.config
+    generation_started = time.perf_counter()
     try:
         response = generation.answer(
             payload.question,
             chunks,
             min_top_score=config.min_top_score,
             max_context_chars=config.max_context_chars,
+            request_id=request_id,
         )
     except GenerationTimeoutError as exc:
+        logger.warning(
+            "request_id=%s event=generation_failed error=timeout",
+            request_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail="The local language model timed out.",
         ) from exc
     except GenerationUnavailableError as exc:
+        logger.warning(
+            "request_id=%s event=generation_failed error=unavailable",
+            request_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="The local language model is unavailable.",
         ) from exc
+    generation_ms = (time.perf_counter() - generation_started) * 1000
 
     logger.info(
         "request_id=%s route=/query status=200 chunks=%d generation_allowed=%s "
-        "retrieval_ms=%.1f total_ms=%.1f",
+        "answer_mode=%s generation_attempts=%d retrieval_ms=%.1f "
+        "generation_ms=%.1f total_ms=%.1f",
         request_id,
         len(chunks),
         response.confidence.generation_allowed,
+        response.answer_mode,
+        response.generation_attempts,
         retrieval_ms,
+        generation_ms,
         (time.perf_counter() - started) * 1000,
     )
     return response

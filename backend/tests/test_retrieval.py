@@ -30,6 +30,13 @@ def test_review_expansion_adds_monitoring_terms():
     assert expanded.startswith("What should be checked")
 
 
+def test_arabic_asthma_query_expands_to_english_retrieval_terms():
+    expanded = expand_query("كيف يتم تشخيص الربو باستخدام قياس التنفس؟")
+
+    assert "asthma airway disease" in expanded
+    assert "asthma diagnosis spirometry" in expanded
+
+
 def test_persisted_bm25_records_return_their_text_chunk_id():
     assert persisted_bm25_chunk_id("chunk-1") == "chunk-1"
     assert persisted_bm25_chunk_id({"id": 4, "text": "chunk-2"}) == "chunk-2"

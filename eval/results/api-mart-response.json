@@ -1,8 +1,9 @@
 {
-  "answer": "Relevant guideline evidence: used as the reliever with maintenance ICS-non-formoterol-LABA (p.75).327 Treatment regimen in which the patient uses an ICS-formoterol inhaler every day (maintenance dose), and also uses the needed for relief of asthma symptoms (reliever doses) MART (Maintenance-And-Reliever Therapy) can be delivered only with combination ICS-formoterol inhalers such as budesonide formoterol and beclometasone-formoterol. [GINA 2026 Strategy Report, p. 77]",
+  "answer": "MART therapy is a treatment regimen in which patients use an ICS-formoterol inhaler every day (maintenance dose) and also use the same medication as needed for relief of asthma symptoms (reliever doses). [GINA 2026 Strategy Report, p. 77]",
+  "answer_mode": "ollama",
+  "generation_attempts": 1,
   "sources": [
-    "GINA 2026 Strategy Report, p. 77",
-    "GINA 2026 Strategy Report, p. 172"
+    "GINA 2026 Strategy Report, p. 77"
   ],
   "source_details": [
     {
@@ -14,18 +15,7 @@
       "score": 0.03252247488101534,
       "score_type": "hybrid_rrf",
       "source_url": "https://ginasthma.org/2026-gina-strategy-report/",
-      "text_preview": "used as the reliever with maintenance ICS-non-formoterol-LABA (p.75).327 Treatment regimen in which the patient uses an ICS-formoterol inhaler every day (maintenance dose), and also uses the needed for relief of asthma symptoms (reliever doses) MART (Maintenance-And-Reliever Therapy) can be delivere"
-    },
-    {
-      "chunk_id": "2147060c2d0600c3c87fe393",
-      "document": "GINA 2026 Strategy Report",
-      "page_start": 172,
-      "page_end": 172,
-      "section": "Management of exacerbations (adults, adolescents, children 6–11 years)  171",
-      "score": 0.031544957774465976,
-      "score_type": "hybrid_rrf",
-      "source_url": "https://ginasthma.org/2026-gina-strategy-report/",
-      "text_preview": "maintenance-and-reliever therapy (MART) with ICS-formoterol (MART, Track 1, p.83), to reduce the risk of future If MART is not available, start ICS-long-acting beta2-agonist (LABA) at medium dose or increase the If the patient was previously using MART with ICS-formoterol, they should resume MART. f"
+      "text_preview": "used as the reliever with maintenance ICS-non-formoterol-LABA (p.75).327 Treatment regimen in which the patient uses an ICS-formoterol inhaler every day (maintenance dose), and also uses the same medication as needed for relief of asthma symptoms (reliever doses) MART (Maintenance-And-Reliever Thera"
     }
   ],
   "risk": {

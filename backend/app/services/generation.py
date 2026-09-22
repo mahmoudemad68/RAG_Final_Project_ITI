@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,9 @@ from app.schemas.query import (
     RiskAssessment,
     SourceDetail,
 )
+from app.services.retrieval import expand_query
+
+logger = logging.getLogger(__name__)
 
 
 class GenerationUnavailableError(RuntimeError):
@@ -33,6 +37,7 @@ CITATION_PATTERN = re.compile(
     r"\[(?P<document>[^\[\]]+?),\s*p\.\s*(?P<page>\d+)\]",
     re.IGNORECASE,
 )
+CITATION_TOKEN_PATTERN = re.compile(r"\[E(?P<index>[1-9]\d*)\]", re.IGNORECASE)
 NUMBER_PATTERN = re.compile(
     r"(?<!\w)\d+(?:\.\d+)?"
     r"(?:\s*(?:%|mg|mcg|µg|ml|l|hours?|days?|weeks?|months?|years?))?"
@@ -44,6 +49,19 @@ NUMERIC_QUERY_PATTERN = re.compile(
     r"mg|mcg|µg|ml|hours?|days?|weeks?|months?|years?|age)\b",
     re.IGNORECASE,
 )
+ARABIC_TEXT_PATTERN = re.compile(r"[\u0600-\u06FF]")
+ARABIC_DIACRITICS_PATTERN = re.compile(
+    r"[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]"
+)
+ARABIC_NORMALIZATION = str.maketrans(
+    {
+        "أ": "ا",
+        "إ": "ا",
+        "آ": "ا",
+        "ٱ": "ا",
+        "ى": "ي",
+    }
+)
 
 
 SYSTEM_PROMPT = """You are a document-grounded clinical information assistant.
@@ -54,10 +72,13 @@ Do not use medical knowledge from your own training.
 If the evidence is insufficient, say that the indexed documents do not contain
 enough information.
 Do not diagnose a person and do not prescribe an individualized medication or dose.
-Every factual statement must end with a citation formatted exactly as:
-[Document Name, p. PAGE]
-Use the exact document name and a page supplied in the evidence.
+Every evidence block supplies a short citation token such as [E1].
+End every factual sentence with the exact token for the supporting evidence.
+The application will expand that token to [Document Name, p. PAGE].
 Do not invent document names, pages, sections, or numbers.
+Keep the answer to one concise sentence of at most 45 words.
+Do not use bullets or number the answer.
+Place each citation on the same line, immediately after the claim it supports.
 Answer in the same language as the user's question when possible."""
 
 
@@ -67,6 +88,11 @@ def _normalize_document_name(value: str) -> str:
 
 def _normalize_number(value: str) -> str:
     return re.sub(r"\s+", "", value.lower())
+
+
+def _normalize_scope_text(value: str) -> str:
+    value = ARABIC_DIACRITICS_PATTERN.sub("", value or "")
+    return value.replace("ـ", "").translate(ARABIC_NORMALIZATION)
 
 
 class GenerationService:
@@ -93,13 +119,25 @@ class GenerationService:
         for rule in payload.get("rules", []):
             try:
                 rule["_compiled"] = [
-                    re.compile(pattern, re.IGNORECASE)
+                    re.compile(_normalize_scope_text(pattern), re.IGNORECASE)
                     for pattern in rule.get("patterns", [])
                 ]
             except re.error as exc:
                 raise SafetyRulesError(
                     f"Invalid safety regex in rule {rule.get('name')}: {exc}"
                 ) from exc
+
+        domain_scope = payload.get("domain_scope", {})
+        patterns = domain_scope.get("patterns", [])
+        if not patterns:
+            raise SafetyRulesError("Safety rules must define domain_scope patterns")
+        try:
+            domain_scope["_compiled"] = [
+                re.compile(_normalize_scope_text(pattern), re.IGNORECASE)
+                for pattern in patterns
+            ]
+        except re.error as exc:
+            raise SafetyRulesError(f"Invalid domain scope regex: {exc}") from exc
         return payload
 
     def check_ready(self) -> bool:
@@ -110,13 +148,34 @@ class GenerationService:
             return False
 
     def classify_risk(self, question: str) -> RiskAssessment:
-        text = (question or "").strip()
+        text = _normalize_scope_text((question or "").strip())
         if not text:
             return RiskAssessment(
                 risk_level="refuse_redirect",
                 reason="empty_query",
             )
+
+        # Emergency language is evaluated before domain scope so urgent breathing
+        # problems are never reduced to a generic out-of-scope response.
         for rule in self.rules.get("rules", []):
+            if rule.get("name") != "possible_emergency":
+                continue
+            if any(pattern.search(text) for pattern in rule.get("_compiled", [])):
+                return RiskAssessment(
+                    risk_level=rule["risk_level"],
+                    reason=rule["name"],
+                )
+
+        domain_patterns = self.rules.get("domain_scope", {}).get("_compiled", [])
+        if not any(pattern.search(text) for pattern in domain_patterns):
+            return RiskAssessment(
+                risk_level="refuse_redirect",
+                reason="outside_asthma_scope",
+            )
+
+        for rule in self.rules.get("rules", []):
+            if rule.get("name") == "possible_emergency":
+                continue
             if any(pattern.search(text) for pattern in rule.get("_compiled", [])):
                 return RiskAssessment(
                     risk_level=rule["risk_level"],
@@ -127,12 +186,21 @@ class GenerationService:
             reason="within_asthma_guideline_scope",
         )
 
-    def _refusal(self, reason: str) -> str:
-        return self.rules.get("refusals", {}).get(
-            reason,
-            self.rules.get(
-                "default_refusal",
-                "I can only answer questions supported by the indexed guidelines.",
+    def _refusal(self, reason: str, question: str = "") -> str:
+        refusals = self.rules.get("refusals", {})
+        localized_reason = (
+            f"{reason}_ar" if ARABIC_TEXT_PATTERN.search(question or "") else reason
+        )
+        return refusals.get(
+            localized_reason,
+            refusals.get(
+                reason,
+                self.rules.get(
+                    "default_refusal_ar"
+                    if ARABIC_TEXT_PATTERN.search(question or "")
+                    else "default_refusal",
+                    "I can only answer questions supported by the indexed guidelines.",
+                ),
             ),
         )
 
@@ -252,13 +320,17 @@ class GenerationService:
         *,
         max_chars: int = 1200,
     ) -> str:
+        expanded_question = expand_query(question)
         terms = {
             token
-            for token in re.findall(r"[a-z0-9]+", question.lower())
+            for token in re.findall(r"[a-z0-9]+", expanded_question.lower())
             if len(token) >= 3
         }
         sentences: list[tuple[int, int, str]] = []
-        for position, raw in enumerate(re.split(r"(?<=[.!?])\s+|\n+", text)):
+        normalized_text = re.sub(r"\s+", " ", text).strip()
+        for position, raw in enumerate(
+            re.split(r"(?<=[.!?])\s+|(?=•)", normalized_text)
+        ):
             sentence = re.sub(r"\s+", " ", raw).strip(" -•\t")
             if len(sentence) < 20:
                 continue
@@ -303,6 +375,7 @@ class GenerationService:
                         f"Section: {chunk.metadata.get('section_title', '')}",
                         f"Source URL: {chunk.metadata.get('source_url', '')}",
                         f"Chunk ID: {chunk.chunk_id}",
+                        f"Citation Token: [E{index}]",
                         "Content:",
                         chunk.text,
                     ]
@@ -327,7 +400,9 @@ class GenerationService:
             f"{caution}# Retrieved Evidence\n\n{self._build_context(chunks)}"
             f"\n\n# User Question\n\n{question}"
             "\n\n# Answer Requirements\n\n"
-            "Synthesize only the evidence above. Cite every factual sentence. "
+            "Answer in one concise sentence of at most 45 words using only the "
+            "evidence above. End it with the matching citation token, such as "
+            "[E1]. Do not use bullets, list numbers, or any other citation format. "
             "If evidence is insufficient, say so.\n\n# Answer"
         )
 
@@ -397,6 +472,23 @@ class GenerationService:
             )
         return checks
 
+    def expand_citation_tokens(
+        self,
+        answer: str,
+        chunks: list[RetrievedChunk],
+    ) -> str:
+        """Expand model-friendly evidence tokens into verified public citations."""
+
+        def replace(match: re.Match[str]) -> str:
+            index = int(match.group("index")) - 1
+            if index < 0 or index >= len(chunks):
+                return match.group(0)
+            chunk = chunks[index]
+            page_start, _ = self._page_range(chunk)
+            return f"[{self._document_name(chunk)}, p. {page_start}]"
+
+        return CITATION_TOKEN_PATTERN.sub(replace, answer or "")
+
     @staticmethod
     def citation_coverage(answer: str) -> float:
         # Protect the period inside ``p. 12`` so it is not mistaken for a
@@ -405,6 +497,13 @@ class GenerationService:
         protected = CITATION_PATTERN.sub(
             lambda match: match.group(0).replace("p.", "p§"),
             answer or "",
+        )
+        # Small local models often put a valid citation on the next line. Treat
+        # that citation as belonging to the immediately preceding claim.
+        protected = re.sub(
+            r"\s+(?=\[[^\[\]]+?,\s*p§\s*\d+\])",
+            " ",
+            protected,
         )
         segments = [
             segment.replace("p§", "p.").strip()
@@ -478,12 +577,13 @@ class GenerationService:
         }
         question_terms = {
             token
-            for token in re.findall(r"[a-z0-9]+", question.lower())
+            for token in re.findall(r"[a-z0-9]+", expand_query(question).lower())
             if len(token) >= 3 and token not in stop_words
         }
         candidates: list[tuple[int, int, int, str, RetrievedChunk]] = []
         for rank, chunk in enumerate(chunks):
-            sentences = re.split(r"(?<=[.!?])\s+|\n+", chunk.text)
+            normalized_text = re.sub(r"\s+", " ", chunk.text).strip()
+            sentences = re.split(r"(?<=[.!?])\s+|(?=•)", normalized_text)
             for position, sentence in enumerate(sentences):
                 cleaned = re.sub(r"\s+", " ", sentence).strip(" -•\t")
                 if len(cleaned) < 40 or len(cleaned) > 600:
@@ -544,15 +644,66 @@ class GenerationService:
         answer: str,
         risk: RiskAssessment,
         confidence: ConfidenceInfo,
+        answer_mode: str,
+        generation_attempts: int = 0,
         chunks: list[RetrievedChunk] | None = None,
     ) -> QueryResponse:
         sources, details = self._source_details(chunks or [])
         return QueryResponse(
             answer=answer,
+            answer_mode=answer_mode,
+            generation_attempts=generation_attempts,
             sources=sources,
             source_details=details,
             risk=risk,
             confidence=confidence,
+        )
+
+    @staticmethod
+    def _log_verification(
+        *,
+        request_id: str,
+        answer_mode: str,
+        generation_attempt: int,
+        citations: list[CitationCheck],
+        faithfulness: float,
+        coverage: float,
+        unsupported: list[str],
+    ) -> None:
+        passed = faithfulness == 1.0 and coverage == 1.0 and not unsupported
+        logger.info(
+            "request_id=%s event=answer_verification answer_mode=%s "
+            "generation_attempt=%d citations=%d supported_citations=%d "
+            "citation_faithfulness=%.3f citation_coverage=%.3f "
+            "unsupported_number_count=%d passed=%s",
+            request_id,
+            answer_mode,
+            generation_attempt,
+            len(citations),
+            sum(check.supported for check in citations),
+            faithfulness,
+            coverage,
+            len(unsupported),
+            passed,
+        )
+
+    @staticmethod
+    def _log_outcome(
+        *,
+        request_id: str,
+        answer_mode: str,
+        generation_attempts: int,
+        source_count: int,
+        reason: str,
+    ) -> None:
+        logger.info(
+            "request_id=%s event=answer_completed answer_mode=%s "
+            "generation_attempts=%d source_count=%d reason=%s",
+            request_id,
+            answer_mode,
+            generation_attempts,
+            source_count,
+            reason,
         )
 
     def answer(
@@ -562,11 +713,13 @@ class GenerationService:
         *,
         min_top_score: float = 0.25,
         max_context_chars: int = 12000,
+        request_id: str | None = None,
     ) -> QueryResponse:
+        trace_id = request_id or "untracked"
         risk = self.classify_risk(question)
         if risk.risk_level == "refuse_redirect":
-            return self._blocked_response(
-                answer=self._refusal(risk.reason),
+            response = self._blocked_response(
+                answer=self._refusal(risk.reason, question),
                 risk=risk,
                 confidence=ConfidenceInfo(
                     generation_allowed=False,
@@ -574,7 +727,16 @@ class GenerationService:
                     evidence_count=0,
                     reason="blocked_by_safety_classifier",
                 ),
+                answer_mode="safety_refusal",
             )
+            self._log_outcome(
+                request_id=trace_id,
+                answer_mode=response.answer_mode,
+                generation_attempts=0,
+                source_count=0,
+                reason=risk.reason,
+            )
+            return response
 
         confidence = self.build_confidence(
             chunks,
@@ -583,18 +745,38 @@ class GenerationService:
         )
         selected = self._select_evidence(chunks, max_context_chars, question)
         if not confidence.generation_allowed or not selected:
-            return self._blocked_response(
+            response = self._blocked_response(
                 answer=(
                     "The indexed documents do not contain enough reliable "
                     "evidence to answer this question."
                 ),
                 risk=risk,
                 confidence=confidence,
+                answer_mode="insufficient_evidence",
                 chunks=selected,
             )
+            self._log_outcome(
+                request_id=trace_id,
+                answer_mode=response.answer_mode,
+                generation_attempts=0,
+                source_count=len(response.source_details),
+                reason=confidence.reason,
+            )
+            return response
 
         prompt = self._build_prompt(question, selected, risk)
-        draft = self._generate(prompt)
+        logger.info(
+            "request_id=%s event=generation_started model=%s "
+            "selected_chunks=%d num_predict=%d",
+            trace_id,
+            self.settings.ollama_model,
+            len(selected),
+            self.settings.ollama_num_predict,
+        )
+        raw_draft = self._generate(prompt)
+        draft = self.expand_citation_tokens(raw_draft, selected)
+        answer_mode = "ollama"
+        generation_attempts = 1
 
         def evaluate(text: str) -> tuple[list[CitationCheck], float, float, list[str]]:
             citations = self.verify_citations(text, selected)
@@ -608,30 +790,70 @@ class GenerationService:
             return citations, faithfulness, coverage, unsupported
 
         citations, faithfulness, coverage, unsupported = evaluate(draft)
-        if faithfulness < 1.0 or coverage < 1.0 or unsupported:
-            correction = (
-                f"{prompt}\n\n# Draft That Failed Verification\n\n{draft}\n\n"
-                "# Correction\n\nRewrite the answer. Use only the supplied evidence, "
-                "put a valid citation at the end of every factual sentence, and "
-                f"remove unsupported numbers: {unsupported or 'none'}."
+        self._log_verification(
+            request_id=trace_id,
+            answer_mode=answer_mode,
+            generation_attempt=generation_attempts,
+            citations=citations,
+            faithfulness=faithfulness,
+            coverage=coverage,
+            unsupported=unsupported,
+        )
+
+        verification_failed = faithfulness < 1.0 or coverage < 1.0 or bool(unsupported)
+        if verification_failed:
+            logger.info(
+                "request_id=%s event=generation_retry next_attempt=2",
+                trace_id,
             )
-            draft = self._generate(correction)
+            correction = (
+                f"{prompt}\n\n# Draft That Failed Verification\n\n{raw_draft}\n\n"
+                "# Correction\n\nRewrite the answer. Use only the supplied evidence, "
+                "return exactly one sentence of at most 45 words, and end it with "
+                "one supplied citation token such as [E1]. Do not use bullets or "
+                "list numbers. "
+                f"Remove unsupported numbers: {unsupported or 'none'}."
+            )
+            raw_draft = self._generate(correction)
+            draft = self.expand_citation_tokens(raw_draft, selected)
+            answer_mode = "ollama_corrected"
+            generation_attempts = 2
             citations, faithfulness, coverage, unsupported = evaluate(draft)
+            self._log_verification(
+                request_id=trace_id,
+                answer_mode=answer_mode,
+                generation_attempt=generation_attempts,
+                citations=citations,
+                faithfulness=faithfulness,
+                coverage=coverage,
+                unsupported=unsupported,
+            )
 
-        if faithfulness < 1.0 or coverage < 1.0 or unsupported:
+        verification_failed = faithfulness < 1.0 or coverage < 1.0 or bool(unsupported)
+        if verification_failed:
+            logger.warning(
+                "request_id=%s event=extractive_fallback_triggered "
+                "generation_attempts=%d",
+                trace_id,
+                generation_attempts,
+            )
             draft, fallback_source = self._extractive_fallback(question, selected)
-            selected = [
-                fallback_source,
-                *[
-                    chunk
-                    for chunk in selected
-                    if chunk.chunk_id != fallback_source.chunk_id
-                ],
-            ]
+            # Report only the evidence actually used in the fallback answer.
+            selected = [fallback_source]
+            answer_mode = "extractive_fallback"
             citations, faithfulness, coverage, unsupported = evaluate(draft)
+            self._log_verification(
+                request_id=trace_id,
+                answer_mode=answer_mode,
+                generation_attempt=0,
+                citations=citations,
+                faithfulness=faithfulness,
+                coverage=coverage,
+                unsupported=unsupported,
+            )
 
         if faithfulness < 1.0 or coverage < 1.0 or unsupported:
-            return self._blocked_response(
+            response = self._blocked_response(
                 answer="The retrieved evidence could not pass grounding verification.",
                 risk=risk,
                 confidence=ConfidenceInfo(
@@ -642,7 +864,22 @@ class GenerationService:
                         "reason": "post_generation_verification_failed",
                     }
                 ),
+                answer_mode="verification_blocked",
+                generation_attempts=generation_attempts,
                 chunks=selected,
+            )
+            self._log_outcome(
+                request_id=trace_id,
+                answer_mode=response.answer_mode,
+                generation_attempts=generation_attempts,
+                source_count=len(response.source_details),
+                reason=response.confidence.reason,
+            )
+            return response
+
+        if answer_mode == "extractive_fallback":
+            confidence = confidence.model_copy(
+                update={"reason": "verified_extractive_fallback"}
             )
 
         if risk.risk_level == "needs_caution":
@@ -653,9 +890,19 @@ class GenerationService:
                 f"{draft}"
             )
 
-        sources, details = self._source_details(selected)
-        return QueryResponse(
+        cited_chunk_ids = {
+            check.source_chunk_id
+            for check in citations
+            if check.supported and check.source_chunk_id
+        }
+        reported_chunks = [
+            chunk for chunk in selected if chunk.chunk_id in cited_chunk_ids
+        ]
+        sources, details = self._source_details(reported_chunks)
+        response = QueryResponse(
             answer=draft,
+            answer_mode=answer_mode,
+            generation_attempts=generation_attempts,
             sources=sources,
             source_details=details,
             risk=risk,
@@ -665,3 +912,11 @@ class GenerationService:
             citation_coverage=round(coverage, 3),
             unsupported_numbers=unsupported,
         )
+        self._log_outcome(
+            request_id=trace_id,
+            answer_mode=response.answer_mode,
+            generation_attempts=generation_attempts,
+            source_count=len(details),
+            reason=confidence.reason,
+        )
+        return response
