@@ -1,0 +1,55 @@
+{
+  "answer": "Relevant guideline evidence: used as the reliever with maintenance ICS-non-formoterol-LABA (p.75).327 Treatment regimen in which the patient uses an ICS-formoterol inhaler every day (maintenance dose), and also uses the needed for relief of asthma symptoms (reliever doses) MART (Maintenance-And-Reliever Therapy) can be delivered only with combination ICS-formoterol inhalers such as budesonide formoterol and beclometasone-formoterol. [GINA 2026 Strategy Report, p. 77]",
+  "sources": [
+    "GINA 2026 Strategy Report, p. 77",
+    "GINA 2026 Strategy Report, p. 172"
+  ],
+  "source_details": [
+    {
+      "chunk_id": "43d5b8386b41bd1fdee945df",
+      "document": "GINA 2026 Strategy Report",
+      "page_start": 77,
+      "page_end": 77,
+      "section": "4. Medications (adults, adolescents, children 6–11 years)",
+      "score": 0.03252247488101534,
+      "score_type": "hybrid_rrf",
+      "source_url": "https://ginasthma.org/2026-gina-strategy-report/",
+      "text_preview": "used as the reliever with maintenance ICS-non-formoterol-LABA (p.75).327 Treatment regimen in which the patient uses an ICS-formoterol inhaler every day (maintenance dose), and also uses the needed for relief of asthma symptoms (reliever doses) MART (Maintenance-And-Reliever Therapy) can be delivere"
+    },
+    {
+      "chunk_id": "2147060c2d0600c3c87fe393",
+      "document": "GINA 2026 Strategy Report",
+      "page_start": 172,
+      "page_end": 172,
+      "section": "Management of exacerbations (adults, adolescents, children 6–11 years)  171",
+      "score": 0.031544957774465976,
+      "score_type": "hybrid_rrf",
+      "source_url": "https://ginasthma.org/2026-gina-strategy-report/",
+      "text_preview": "maintenance-and-reliever therapy (MART) with ICS-formoterol (MART, Track 1, p.83), to reduce the risk of future If MART is not available, start ICS-long-acting beta2-agonist (LABA) at medium dose or increase the If the patient was previously using MART with ICS-formoterol, they should resume MART. f"
+    }
+  ],
+  "risk": {
+    "risk_level": "allowed",
+    "reason": "within_asthma_guideline_scope"
+  },
+  "confidence": {
+    "generation_allowed": true,
+    "confidence_level": "medium",
+    "top_score": 0.03252247488101534,
+    "score_type": "hybrid_rrf",
+    "evidence_count": 5,
+    "reason": "official_evidence_available"
+  },
+  "citation_checks": [
+    {
+      "citation": "[GINA 2026 Strategy Report, p. 77]",
+      "document": "GINA 2026 Strategy Report",
+      "page_number": 77,
+      "supported": true,
+      "source_chunk_id": "43d5b8386b41bd1fdee945df"
+    }
+  ],
+  "citation_faithfulness": 1.0,
+  "citation_coverage": 1.0,
+  "unsupported_numbers": []
+}

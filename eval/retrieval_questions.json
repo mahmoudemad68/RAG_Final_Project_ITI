@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "topic": "Asthma guidance",
+  "page_convention": "One-based PDF page number",
+  "questions": [
+    {
+      "id": "r01",
+      "question": "What objective test results can confirm asthma in adults?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nice-ng245-asthma-guideline",
+          "page_from": 9,
+          "page_to": 10,
+          "keywords": ["50 ppb", "bronchodilator", "fev1"]
+        }
+      ]
+    },
+    {
+      "id": "r02",
+      "question": "What initial treatment does NICE recommend for newly diagnosed asthma in people aged 12 and over?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nice-ng245-asthma-guideline",
+          "page_from": 18,
+          "page_to": 20,
+          "keywords": ["ics/formoterol", "air therapy", "as needed"]
+        }
+      ]
+    },
+    {
+      "id": "r03",
+      "question": "What should be checked at every asthma review?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nice-ng245-asthma-guideline",
+          "page_from": 14,
+          "page_to": 15,
+          "keywords": ["every review", "reliever inhaler", "oral corticosteroids"]
+        }
+      ]
+    },
+    {
+      "id": "r04",
+      "question": "How should maintenance asthma therapy be decreased?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nice-ng245-asthma-guideline",
+          "page_from": 25,
+          "page_to": 27,
+          "keywords": ["decreasing maintenance", "risks and benefits", "monitor"]
+        }
+      ]
+    },
+    {
+      "id": "r05",
+      "question": "What is MART therapy?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "gina-2026-strategy-report",
+          "page_from": 74,
+          "page_to": 77,
+          "keywords": ["maintenance-and-reliever therapy", "ics-formoterol", "mart"]
+        }
+      ]
+    },
+    {
+      "id": "r06",
+      "question": "Why is SABA-only asthma treatment discouraged?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "gina-2026-strategy-report",
+          "page_from": 86,
+          "page_to": 95,
+          "keywords": ["saba-only", "risk", "exacerbations"]
+        }
+      ]
+    },
+    {
+      "id": "r07",
+      "question": "What does GINA recommend for asthma in people with obesity?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "gina-2026-strategy-report",
+          "page_from": 128,
+          "page_to": 128,
+          "keywords": ["weight reduction", "obesity", "asthma control"]
+        }
+      ]
+    },
+    {
+      "id": "r08",
+      "question": "What is recommended before exercise to prevent exercise-induced bronchospasm?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nhlbi-asthma-care-quick-reference-2012",
+          "page_from": 4,
+          "page_to": 4,
+          "keywords": ["before exercise", "saba", "ltra"]
+        }
+      ]
+    },
+    {
+      "id": "r09",
+      "question": "What belongs in a written asthma action plan?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nhlbi-asthma-care-quick-reference-2012",
+          "page_from": 2,
+          "page_to": 4,
+          "keywords": ["written asthma action plan", "daily actions", "medical care"]
+        }
+      ]
+    },
+    {
+      "id": "r10",
+      "question": "How do NICE and NHLBI recommend confirming an asthma diagnosis?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "nice-ng245-asthma-guideline",
+          "page_from": 9,
+          "page_to": 10,
+          "keywords": ["spirometry", "bronchodilator"]
+        },
+        {
+          "document_id": "nhlbi-asthma-care-quick-reference-2012",
+          "page_from": 2,
+          "page_to": 2,
+          "keywords": ["spirometry", "reversible"]
+        }
+      ]
+    },
+    {
+      "id": "r11",
+      "question": "When should a written asthma action plan be reviewed?",
+      "expect_hit": true,
+      "golden": [
+        {
+          "document_id": "gina-2026-strategy-report",
+          "page_from": 179,
+          "page_to": 179,
+          "keywords": ["written asthma action plan", "review", "exacerbation"]
+        }
+      ]
+    },
+    {
+      "id": "r12",
+      "question": "What are the diagnostic thresholds for diabetes?",
+      "expect_hit": false,
+      "golden": []
+    }
+  ]
+}

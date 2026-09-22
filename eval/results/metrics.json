@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-09-22",
+  "corpus": {
+    "documents": 3,
+    "pages": 374,
+    "chunks": 515,
+    "chroma_records": 515
+  },
+  "retrieval": {
+    "questions": 12,
+    "positive_questions": 11,
+    "precision_at_3": 0.242,
+    "precision_at_5": 0.182,
+    "hit_rate_at_3": 0.727,
+    "hit_rate_at_5": 0.909,
+    "hit_rate_at_10": 0.909,
+    "mean_reciprocal_rank": 0.556
+  },
+  "answer_safety": {
+    "cases": 15,
+    "expected_document_context_relevance": 0.8,
+    "grounded_rate": 1.0,
+    "citation_faithfulness": 1.0,
+    "safety_accuracy": 1.0,
+    "refusal_accuracy": 1.0,
+    "unsupported_numeric_claims": 0,
+    "human_correctness": null,
+    "human_review_status": "pending"
+  },
+  "live_acceptance": {
+    "cold_mart_request_seconds": 488.37051,
+    "warm_browser_mart_request_seconds": 156.4443,
+    "cold_mart_http_status": 200,
+    "citation_faithfulness": 1.0,
+    "citation_coverage": 1.0,
+    "unsupported_numbers": 0
+  }
+}

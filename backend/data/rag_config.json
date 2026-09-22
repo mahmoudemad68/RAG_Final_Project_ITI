@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-09-22T08:08:53.535942+00:00",
+  "collection_name": "asthma_guidelines",
+  "embedding_model": "BAAI/bge-base-en-v1.5",
+  "embedding_dimension": 768,
+  "normalize_embeddings": true,
+  "query_embedding_prefix": "Represent this sentence for searching relevant passages: ",
+  "embedding_batch_size": 32,
+  "chunk_min_tokens": 300,
+  "chunk_max_tokens": 800,
+  "chunk_overlap_tokens": 80,
+  "retrieval_mode": "hybrid",
+  "dense_candidate_k": 20,
+  "lexical_candidate_k": 20,
+  "retrieval_top_k": 5,
+  "fusion_rrf_k": 60,
+  "distance": "cosine",
+  "score_semantics": "hybrid reciprocal-rank-fusion score",
+  "min_top_score": 0.0,
+  "max_context_chars": 2500,
+  "ollama_model": "llama3.2:1b",
+  "corpus_fingerprint": "91be75e42824bd6f8fcfa11e67b068608a029e14803855306ae3e6b773b92feb",
+  "source_hashes": {
+    "gina-2026-strategy-report": "33d0453df2d6d49be525a93ae547f71943e9af4f138ab44b9e5eaa765a04b445",
+    "nice-ng245-asthma-guideline": "5e0101a680f6c4a74561af802cf5dd0c182283c7f22a27338737e85d37334d1c",
+    "nhlbi-asthma-care-quick-reference-2012": "a3617538f4634420d7173fd71a4b665ce23417238dc5aade9ce364f007dec29a"
+  }
+}

@@ -1,0 +1,57 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/rag_pipeline.executed.ipynb
+
+# Local configuration and secrets
+.env
+*.env
+!.env.example
+backend/.env
+frontend/.env
+
+# Runtime output
+*.log
+logs/
+eval/results/*
+!eval/results/.gitkeep
+!eval/results/*.json
+!eval/results/*.csv
+
+# Downloaded models and local caches
+models/
+.cache/
+
+# Large/intermediate RAG build artifacts (rebuild with the notebook)
+# The small persisted Chroma/BM25 stores, chunk catalog, runtime config, and
+# final evaluation CSV are intentionally included for clone-and-run behavior.
+backend/data/chunk_diagnostics.csv
+backend/data/answer_evaluation.jsonl
+backend/data/answer_evaluation.meta.json
+backend/data/embeddings.npy
+backend/data/embeddings.meta.json
+backend/data/embedding_batches/
+
+# Source documents are obtained from official publishers
+data/raw/*.pdf
+!data/raw/README.md
+
+# Downloaded implementation reference; never submit it
+reference/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

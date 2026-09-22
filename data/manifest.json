@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "citation_page_convention": "One-based PDF page number",
+  "retrieved_at": "2026-09-21",
+  "documents": [
+    {
+      "document_id": "gina-2026-strategy-report",
+      "file_name": "GINA_2026_Strategy_Report.pdf",
+      "display_name": "GINA 2026 Strategy Report",
+      "publisher": "Global Initiative for Asthma (GINA)",
+      "version": "2026",
+      "source_url": "https://ginasthma.org/2026-gina-strategy-report/",
+      "sha256": "33d0453df2d6d49be525a93ae547f71943e9af4f138ab44b9e5eaa765a04b445",
+      "page_count": 298,
+      "file_size_bytes": 17114104,
+      "format": "pdf",
+      "redistribution_note": "Officially available for personal download; confirm publisher terms before redistribution."
+    },
+    {
+      "document_id": "nice-ng245-asthma-guideline",
+      "file_name": "NICE_NG245_Asthma_Guideline.pdf",
+      "display_name": "NICE NG245 Asthma Guideline",
+      "publisher": "National Institute for Health and Care Excellence (NICE)",
+      "version": "NG245, published 2024",
+      "source_url": "https://www.nice.org.uk/guidance/ng245/resources/asthma-diagnosis-monitoring-and-chronic-asthma-management-bts-nice-sign-pdf-66143958279109",
+      "sha256": "5e0101a680f6c4a74561af802cf5dd0c182283c7f22a27338737e85d37334d1c",
+      "page_count": 64,
+      "file_size_bytes": 413652,
+      "format": "pdf",
+      "redistribution_note": "Copyright NICE; obtain from the official source and follow NICE terms."
+    },
+    {
+      "document_id": "nhlbi-asthma-care-quick-reference-2012",
+      "file_name": "NHLBI_Asthma_Care_Quick_Reference.pdf",
+      "display_name": "NHLBI Asthma Care Quick Reference",
+      "publisher": "National Heart, Lung, and Blood Institute, NIH",
+      "version": "January 2012",
+      "source_url": "https://www.nhlbi.nih.gov/sites/default/files/publications/12-5075.pdf",
+      "sha256": "a3617538f4634420d7173fd71a4b665ce23417238dc5aade9ce364f007dec29a",
+      "page_count": 12,
+      "file_size_bytes": 1197612,
+      "format": "pdf",
+      "redistribution_note": "Obtain from the official NHLBI page and verify applicable reuse terms."
+    }
+  ]
+}

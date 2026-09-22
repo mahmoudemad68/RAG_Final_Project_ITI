@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "name": "possible_emergency",
+      "risk_level": "refuse_redirect",
+      "patterns": [
+        "\\b(can(?:not|'t) breathe|blue lips|turning blue|unconscious|collapsed|severe attack|chest pain|call an ambulance|emergency)\\b",
+        "(لا أستطيع التنفس|لا استطيع التنفس|شفاه زرقاء|فقدان الوعي|طوارئ|اتصل بالإسعاف)"
+      ]
+    },
+    {
+      "name": "personal_medication_advice",
+      "risk_level": "refuse_redirect",
+      "patterns": [
+        "\\b(should i take|can i take|stop my medication|dose for me|dosage for me|prescribe me)\\b",
+        "\\b(?:increase|raise|double|change)\\s+my(?:\\s+\\w+){0,3}\\s+dose\\b",
+        "(هل يمكنني أن آخذ|الجرعة المناسبة لي|زيادة جرعتي|أوقف دوائي)"
+      ]
+    },
+    {
+      "name": "clearly_non_clinical",
+      "risk_level": "refuse_redirect",
+      "patterns": [
+        "\\b(write (?:me )?(?:python|javascript|java|c\\+\\+) code|weather forecast|cooking recipe|capital of france)\\b"
+      ]
+    },
+    {
+      "name": "outside_asthma_scope",
+      "risk_level": "refuse_redirect",
+      "patterns": [
+        "\\b(diabetes|hypertension|cancer|kidney disease|stroke treatment)\\b"
+      ]
+    },
+    {
+      "name": "patient_specific_scenario",
+      "risk_level": "needs_caution",
+      "patterns": [
+        "\\b(i|my|me|my child|my son|my daughter|my mother|my father)\\b.{0,80}\\b(wheez|cough|breath|symptom|asthma|inhaler)\\w*"
+      ]
+    }
+  ],
+  "refusals": {
+    "empty_query": "Please provide an asthma-guideline question.",
+    "possible_emergency": "This may require urgent medical attention. Contact local emergency medical services or seek immediate professional care now.",
+    "personal_medication_advice": "I cannot recommend a medication or dose for a specific person. Please consult a qualified healthcare professional.",
+    "clearly_non_clinical": "This question is outside the indexed asthma-guideline scope.",
+    "outside_asthma_scope": "This question is outside the indexed asthma-guideline scope."
+  },
+  "default_refusal": "I can only answer questions supported by the indexed asthma guidelines."
+}
