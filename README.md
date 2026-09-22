@@ -107,23 +107,24 @@ Validate text extraction:
 
 ## Setup
 
+For copy-and-paste local and Docker startup commands, see
+[`start.md`](start.md).
+
 ### 1. Create an environment
 
 Linux/macOS:
 
     python3 -m venv .venv
     source .venv/bin/activate
+    pip install -r backend/requirements.txt -r frontend/requirements.txt
     pip install -r requirements-dev.txt
 
 Windows PowerShell:
 
     py -m venv .venv
     .venv\Scripts\Activate.ps1
+    pip install -r backend/requirements.txt -r frontend/requirements.txt
     pip install -r requirements-dev.txt
-
-Install frontend dependencies when using a separate environment:
-
-    pip install -r frontend/requirements.txt
 
 ### 2. Install and start Ollama
 
